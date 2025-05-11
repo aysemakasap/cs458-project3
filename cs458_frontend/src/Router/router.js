@@ -1,6 +1,7 @@
 import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import Login from '../pages/login';
 import AfterPage from '../pages/afterPage';
+import SurveyPage from '../pages/SurveyPage';
 
 const Router = () => {
     return <RouterProvider router={router}/>;
@@ -9,6 +10,7 @@ const Router = () => {
 const router = createBrowserRouter([
     {path: '', element: <Login/>},
     {path: '/success', element: <AfterPage/>},
+    {path: '/survey', element: <SurveyPage/>},
 ]);
 
 export default Router;
