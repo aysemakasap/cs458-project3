@@ -42,7 +42,7 @@ export default function Login() {
       
       if (response.ok) {
         alert("Login Successful!");
-        navigate("/success");
+        navigate("/survey");
         resetLoginState();
       } else {
         handleFailedLogin();

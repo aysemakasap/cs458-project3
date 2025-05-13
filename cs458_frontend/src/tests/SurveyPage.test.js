@@ -1,8 +1,9 @@
+// src/tests/SurveyPage.test.js
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { SurveyService } from '../services/surveyService';
+import { SurveyService } from '../services/SurveyService';
 import SurveyPage from '../pages/SurveyPage';
 
 // Mock the required modules and services
@@ -31,14 +32,14 @@ describe('SurveyPage Component', () => {
     expect(screen.getByText('AI Usage Survey')).toBeInTheDocument();
     
     // Check for basic form fields
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/surname/i)).toBeInTheDocument();
-    expect(screen.getByText(/birth date/i)).toBeInTheDocument();
-    expect(screen.getByText(/education level/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
-    expect(screen.getByText(/gender/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Surname')).toBeInTheDocument();
+    expect(screen.getByText('Birth Date')).toBeInTheDocument();
+    expect(screen.getByText(/Education Level/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/City/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gender/i)).toBeInTheDocument();
     expect(screen.getByText(/AI Models/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/beneficial AI use cases/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Beneficial AI Use Cases')).toBeInTheDocument();
     
     // Check for AI model options
     expect(screen.getByText('chatGPT')).toBeInTheDocument();
@@ -47,7 +48,7 @@ describe('SurveyPage Component', () => {
     expect(screen.getByText('copilot')).toBeInTheDocument();
     expect(screen.getByText('deepseek')).toBeInTheDocument();
     
-    // Check for education level options
+    // Check for education options
     expect(screen.getByText('Primary School')).toBeInTheDocument();
     expect(screen.getByText('High School')).toBeInTheDocument();
     expect(screen.getByText('Bachelor Degree')).toBeInTheDocument();
@@ -79,11 +80,14 @@ describe('SurveyPage Component', () => {
       </BrowserRouter>
     );
 
-    const nameInput = screen.getByLabelText(/name/i);
+    const nameInput = screen.getByLabelText('Name');
     
     // Type something then delete it
     userEvent.type(nameInput, 'John');
     userEvent.clear(nameInput);
+    
+    // Trigger blur event to validate
+    fireEvent.blur(nameInput);
     
     // Check for validation message
     expect(screen.getByText('Name is required')).toBeInTheDocument();
@@ -206,7 +210,7 @@ describe('SurveyPage Component', () => {
     );
 
     // Find the AI use case textarea
-    const useCaseField = screen.getByLabelText(/beneficial AI use cases/i);
+    const useCaseField = screen.getByLabelText('Beneficial AI Use Cases');
     
     // Create a string longer than 300 characters
     const longText = 'a'.repeat(310);
@@ -228,39 +232,41 @@ describe('SurveyPage Component', () => {
     );
 
     // Fill all required fields
-    userEvent.type(screen.getByLabelText(/name/i), 'John');
-    userEvent.type(screen.getByLabelText(/surname/i), 'Doe');
+    userEvent.type(screen.getByLabelText('Name'), 'John');
+    userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
     // Select birth date
     fireEvent.click(screen.getByText('Select birth date'));
     const dateButton = screen.getByText('15');
     fireEvent.click(dateButton);
     
-    // Select education
+    // Select education level
     fireEvent.click(screen.getByText('Bachelor Degree'));
     
     // Fill city
-    userEvent.type(screen.getByLabelText(/city/i), 'New York');
+    userEvent.type(screen.getByLabelText(/City/i), 'New York');
     
     // Select gender
     fireEvent.click(screen.getByText('male'));
     
-    // Select AI model and fill description
+    // Select AI model
     fireEvent.click(screen.getByLabelText('chatGPT'));
+    
+    // Enter model description
     const descriptionField = await screen.findByPlaceholderText('Describe chatGPT defects');
-    userEvent.type(descriptionField, 'Test description');
+    userEvent.type(descriptionField, 'Sometimes provides inaccurate information');
     
     // Fill AI use case
-    userEvent.type(screen.getByLabelText(/beneficial AI use cases/i), 'Test use case');
+    userEvent.type(screen.getByLabelText('Beneficial AI Use Cases'), 'Helps with research and generating creative content');
     
-    // Submit button should now be visible
+    // Now the submit button should be visible
     await waitFor(() => {
       expect(screen.getByText('Send Survey')).toBeInTheDocument();
     });
   });
 
   test('should handle successful form submission', async () => {
-    // Mock successful response
+    // Mock successful submission response
     SurveyService.submitSurveyResult.mockResolvedValue({ status: 200 });
     
     render(
@@ -269,18 +275,38 @@ describe('SurveyPage Component', () => {
       </BrowserRouter>
     );
 
-    // Fill required fields (abbreviated version for test)
-    userEvent.type(screen.getByLabelText(/name/i), 'John');
-    userEvent.type(screen.getByLabelText(/surname/i), 'Doe');
+    // Fill required fields and make form valid
+    userEvent.type(screen.getByLabelText('Name'), 'John');
+    userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
-    // Force form to be valid and show submit button
-    // This is a testing shortcut - in real tests you'd fill every field
+    // Select birth date
+    fireEvent.click(screen.getByText('Select birth date'));
+    fireEvent.click(screen.getByText('15'));
     
-    // Find and click submit button
-    const submitButton = screen.getByText('Send Survey');
+    // Select education
+    fireEvent.click(screen.getByText('Bachelor Degree'));
+    
+    // Fill city
+    userEvent.type(screen.getByLabelText(/City/i), 'New York');
+    
+    // Select gender
+    fireEvent.click(screen.getByText('male'));
+    
+    // Select AI model
+    fireEvent.click(screen.getByLabelText('chatGPT'));
+    
+    // Fill description
+    const descriptionField = await screen.findByPlaceholderText('Describe chatGPT defects');
+    userEvent.type(descriptionField, 'Test description');
+    
+    // Fill AI use case
+    userEvent.type(screen.getByLabelText('Beneficial AI Use Cases'), 'Test use case');
+    
+    // Submit button should now be visible
+    const submitButton = await screen.findByText('Send Survey');
     fireEvent.click(submitButton);
     
-    // Check if API was called
+    // Check if API was called and alert shown
     await waitFor(() => {
       expect(SurveyService.submitSurveyResult).toHaveBeenCalled();
       expect(mockAlert).toHaveBeenCalledWith('Success', 'Survey submitted successfully!');
@@ -288,12 +314,12 @@ describe('SurveyPage Component', () => {
     
     // Form should be reset
     await waitFor(() => {
-      expect(screen.getByLabelText(/name/i).value).toBe('');
+      expect(screen.getByLabelText('Name').value).toBe('');
     });
   });
 
   test('should handle failed form submission', async () => {
-    // Mock failed response
+    // Mock failed submission response
     SurveyService.submitSurveyResult.mockResolvedValue({ status: 400 });
     
     render(
@@ -302,11 +328,35 @@ describe('SurveyPage Component', () => {
       </BrowserRouter>
     );
 
-    // Fill required fields (abbreviated)
-    userEvent.type(screen.getByLabelText(/name/i), 'John');
+    // Fill required fields and make form valid
+    userEvent.type(screen.getByLabelText('Name'), 'John');
+    userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
-    // Find and click submit button
-    const submitButton = screen.getByText('Send Survey');
+    // Select birth date
+    fireEvent.click(screen.getByText('Select birth date'));
+    fireEvent.click(screen.getByText('15'));
+    
+    // Select education
+    fireEvent.click(screen.getByText('Bachelor Degree'));
+    
+    // Fill city
+    userEvent.type(screen.getByLabelText(/City/i), 'New York');
+    
+    // Select gender
+    fireEvent.click(screen.getByText('male'));
+    
+    // Select AI model
+    fireEvent.click(screen.getByLabelText('chatGPT'));
+    
+    // Fill description
+    const descriptionField = await screen.findByPlaceholderText('Describe chatGPT defects');
+    userEvent.type(descriptionField, 'Test description');
+    
+    // Fill AI use case
+    userEvent.type(screen.getByLabelText('Beneficial AI Use Cases'), 'Test use case');
+    
+    // Submit button should now be visible
+    const submitButton = await screen.findByText('Send Survey');
     fireEvent.click(submitButton);
     
     // Check error handling
@@ -331,7 +381,7 @@ describe('SurveyPage Component', () => {
     
     // Enter description
     const descriptionField = await screen.findByPlaceholderText('Describe chatGPT defects');
-    userEvent.type(descriptionField, 'Test description');
+    fireEvent.change(descriptionField, { target: { value: 'Test description' } });
     
     // Deselect chatGPT
     fireEvent.click(chatGPTCheckbox);
