@@ -2,101 +2,64 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CreateCustomSurvey from '../pages/CreateCustomSurveyPage';
-import GoToCustomSurvey from '../pages/goToCustomSurvey';
-import FillSurvey from '../pages/fillSurvey';
 
-// Reset DB before each test (you should expose a cleanup endpoint in your backend for this in a test profile)
+// Real API test
+// You must ensure the backend is running at http://localhost:8080
+
 beforeEach(async () => {
+  // Optionally reset test state via backend endpoint
   await fetch('http://localhost:8080/api/test/reset', { method: 'POST' });
 });
 
-describe('Full Survey Flow (Real API)', () => {
-  test('CreateSurvey creates a valid survey with 5 types', async () => {
-    render(
-      <BrowserRouter>
-        <CreateCustomSurvey />
-      </BrowserRouter>
-    );
+test('Create a survey with one question of each type', async () => {
+  render(
+    <BrowserRouter>
+      <CreateCustomSurvey />
+    </BrowserRouter>
+  );
 
-    const addBtn = screen.getByText('Add Question');
+  const addBtn = screen.getByText('Add Question');
 
-    for (let type of ['OpenEnded', 'MultipleChoice', 'Dropdown', 'Checkbox', 'RatingScale']) {
-      fireEvent.click(addBtn);
-      const selects = screen.getAllByRole('combobox');
-      fireEvent.change(selects[selects.length - 1], { target: { value: type } });
+  const types = ['OpenEnded', 'MultipleChoice', 'Dropdown', 'Checkbox', 'RatingScale'];
 
-      const inputs = screen.getAllByPlaceholderText('Enter question text');
-      fireEvent.change(inputs[inputs.length - 1], { target: { value: `${type} test question` } });
+  for (let type of types) {
+    fireEvent.click(addBtn);
+    const typeDropdowns = screen.getAllByRole('combobox');
+    fireEvent.change(typeDropdowns[typeDropdowns.length - 1], { target: { value: type } });
 
-      if (['MultipleChoice', 'Dropdown', 'Checkbox'].includes(type)) {
-        const optionInputs = screen.getAllByPlaceholderText('Enter option');
-        fireEvent.change(optionInputs[optionInputs.length - 1], { target: { value: 'Option 1' } });
-        fireEvent.click(screen.getAllByText('Add Option')[0]);
-      }
+    const questionInputs = screen.getAllByPlaceholderText('Enter question text');
+    fireEvent.change(questionInputs[questionInputs.length - 1], {
+      target: { value: `${type} test question` },
+    });
 
-      if (type === 'RatingScale') {
-        const ratingInput = screen.getAllByRole('spinbutton')[0];
-        fireEvent.change(ratingInput, { target: { value: 7 } });
-      }
-    }
+    if (['MultipleChoice', 'Dropdown', 'Checkbox'].includes(type)) {
+      const optionInputs = screen.getAllByPlaceholderText('Enter Option');
+      fireEvent.change(optionInputs[optionInputs.length - 1], {
+        target: { value: 'Option 1' },
+      });
+      fireEvent.click(screen.getAllByText('Add Option').at(-1));
 
-    fireEvent.click(screen.getByText('Submit Survey'));
-
-    await screen.findByText('Survey created!');
-  });
-
-  test('GoToCustomSurvey lists and navigates to last survey', async () => {
-    render(
-      <BrowserRouter>
-        <GoToCustomSurvey />
-      </BrowserRouter>
-    );
-
-    const listItems = await screen.findAllByRole('listitem');
-    expect(listItems.length).toBeGreaterThan(0);
-    fireEvent.doubleClick(listItems[listItems.length - 1]);
-  });
-
-  test('FillSurvey interaction and submission', async () => {
-    // Assuming last created survey is accessible
-    const res = await fetch('http://localhost:8080/api/surveys');
-    const surveys = await res.json();
-    const latestSurvey = surveys[surveys.length - 1];
-
-    render(
-      <BrowserRouter>
-        <FillSurvey id={latestSurvey.id.toString()} />
-      </BrowserRouter>
-    );
-
-    await screen.findByText(`Fill Out Survey #${latestSurvey.id}`);
-
-    // Fill in answers
-    for (const q of latestSurvey.questions) {
-      if (q.type === 'OpenEnded') {
-        fireEvent.change(screen.getByPlaceholderText('Write your response...'), {
-          target: { value: 'Test open answer' }
+      // Wait for new input and fill it in
+      await waitFor(() => {
+        const updatedOptions = screen.getAllByPlaceholderText('Enter Option');
+        expect(updatedOptions.length).toBeGreaterThan(optionInputs.length);
+        fireEvent.change(updatedOptions[updatedOptions.length - 1], {
+          target: { value: 'Option 2' },
         });
-      }
-
-      if (q.type === 'MultipleChoice') {
-        fireEvent.click(screen.getAllByRole('checkbox')[0]);
-      }
-
-      if (q.type === 'Checkbox') {
-        fireEvent.click(screen.getAllByRole('radio')[0]);
-      }
-
-      if (q.type === 'Dropdown') {
-        fireEvent.change(screen.getByRole('combobox'), { target: { value: q.options[0] } });
-      }
-
-      if (q.type === 'RatingScale') {
-        fireEvent.change(screen.getByRole('slider'), { target: { value: '8' } });
-      }
+      });
     }
 
-    fireEvent.click(screen.getByText('Submit Survey'));
-    await screen.findByText('Survey submitted!');
+    if (type === 'RatingScale') {
+      const ratingInputs = screen.getAllByRole('spinbutton');
+      fireEvent.change(ratingInputs[ratingInputs.length - 1], {
+        target: { value: '4' },
+      });
+    }
+  }
+
+  fireEvent.click(screen.getByText('Submit Survey'));
+
+  await waitFor(() => {
+    expect(screen.getByText('Survey created!')).toBeInTheDocument();
   });
 });

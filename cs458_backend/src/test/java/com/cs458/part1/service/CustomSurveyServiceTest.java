@@ -118,11 +118,10 @@ public class CustomSurveyServiceTest {
     @Test
     public void shouldDeleteSurvey() {
         given(customSurveyRepository.findById(1)).willReturn(Optional.of(survey));
-        doNothing().when(customSurveyRepository).deleteById(1);
 
         customSurveyService.deleteSurvey(1);
 
-        verify(customSurveyRepository, times(1)).deleteById(1);
+        verify(customSurveyRepository, times(1)).delete(survey); // not deleteById
     }
 
     @Test
