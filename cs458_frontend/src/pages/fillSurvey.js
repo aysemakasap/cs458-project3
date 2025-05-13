@@ -5,6 +5,7 @@ const FillSurvey = () => {
   const { id } = useParams();
   const [survey, setSurvey] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [message, setMessage] = useState(''); // ✅ added this
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/surveys/${id}`)
@@ -51,9 +52,9 @@ const FillSurvey = () => {
     });
 
     if (response.ok) {
-      alert('Survey submitted!');
+      setMessage('Survey submitted!');
     } else {
-      alert('Submission failed.');
+      setMessage('Submission failed.');
     }
   };
 
@@ -127,6 +128,7 @@ const FillSurvey = () => {
       ))}
 
       <button onClick={handleSubmit}>Submit Survey</button>
+      {message && <p>{message}</p>}
     </div>
   );
 };

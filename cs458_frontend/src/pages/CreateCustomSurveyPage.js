@@ -11,6 +11,7 @@ const questionTypes = [
 
 const CreateCustomSurvey = () => {
   const [questions, setQuestions] = useState([]);
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const addQuestion = () => {
@@ -59,10 +60,10 @@ const CreateCustomSurvey = () => {
     });
 
     if (response.ok) {
-      alert('Survey created!');
+      setMessage('Survey created!');
       navigate('/success');
     } else {
-      alert('Creation failed');
+      setMessage('Creation failed');
     }
   };
 
@@ -125,6 +126,7 @@ const CreateCustomSurvey = () => {
       ))}
 
       <button onClick={handleSubmit} style={{ marginTop: '20px' }}>Submit Survey</button>
+      {message && <p>{message}</p>}
     </div>
   );
 };
