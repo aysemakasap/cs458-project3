@@ -7,7 +7,7 @@ import { SurveyService } from '../services/SurveyService';
 import SurveyPage from '../pages/SurveyPage';
 
 // Mock the required modules and services
-jest.mock('../services/surveyService');
+jest.mock('../services/SurveyService');
 
 // Mock window.alert
 const mockAlert = jest.fn();
@@ -142,26 +142,22 @@ describe('SurveyPage Component', () => {
     });
   });
 
-  test('should open date picker when birth date field is clicked', async () => {
+  // FIXED: Updated test to work with HTML5 date input
+  test('should handle date input selection', () => {
     render(
       <BrowserRouter>
         <SurveyPage />
       </BrowserRouter>
     );
 
-    // Find the birth date field
-    const dateField = screen.getByText('Select birth date');
+    // Find the date input
+    const dateInput = screen.getByLabelText('Birth Date');
     
-    // Date picker should not be visible initially
-    expect(screen.queryByTestId('date-picker')).not.toBeInTheDocument();
+    // Set a date value
+    fireEvent.change(dateInput, { target: { value: '2000-01-15' } });
     
-    // Click on date field
-    fireEvent.click(dateField);
-    
-    // Date picker should appear
-    await waitFor(() => {
-      expect(screen.getByTestId('date-picker')).toBeInTheDocument();
-    });
+    // Verify the date was set
+    expect(dateInput.value).toBe('2000-01-15');
   });
 
   test('should select education level when an option is clicked', async () => {
@@ -224,6 +220,7 @@ describe('SurveyPage Component', () => {
     });
   });
 
+  // FIXED: Updated test to work with HTML5 date input
   test('should show submit button when all fields are valid', async () => {
     render(
       <BrowserRouter>
@@ -235,10 +232,9 @@ describe('SurveyPage Component', () => {
     userEvent.type(screen.getByLabelText('Name'), 'John');
     userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
-    // Select birth date
-    fireEvent.click(screen.getByText('Select birth date'));
-    const dateButton = screen.getByText('15');
-    fireEvent.click(dateButton);
+    // Select birth date using HTML5 date input
+    const dateInput = screen.getByLabelText('Birth Date');
+    fireEvent.change(dateInput, { target: { value: '2000-01-15' } });
     
     // Select education level
     fireEvent.click(screen.getByText('Bachelor Degree'));
@@ -265,6 +261,7 @@ describe('SurveyPage Component', () => {
     });
   });
 
+  // FIXED: Updated test to work with HTML5 date input
   test('should handle successful form submission', async () => {
     // Mock successful submission response
     SurveyService.submitSurveyResult.mockResolvedValue({ status: 200 });
@@ -279,9 +276,9 @@ describe('SurveyPage Component', () => {
     userEvent.type(screen.getByLabelText('Name'), 'John');
     userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
-    // Select birth date
-    fireEvent.click(screen.getByText('Select birth date'));
-    fireEvent.click(screen.getByText('15'));
+    // Select birth date using HTML5 date input
+    const dateInput = screen.getByLabelText('Birth Date');
+    fireEvent.change(dateInput, { target: { value: '2000-01-15' } });
     
     // Select education
     fireEvent.click(screen.getByText('Bachelor Degree'));
@@ -318,6 +315,7 @@ describe('SurveyPage Component', () => {
     });
   });
 
+  // FIXED: Updated test to work with HTML5 date input
   test('should handle failed form submission', async () => {
     // Mock failed submission response
     SurveyService.submitSurveyResult.mockResolvedValue({ status: 400 });
@@ -332,9 +330,9 @@ describe('SurveyPage Component', () => {
     userEvent.type(screen.getByLabelText('Name'), 'John');
     userEvent.type(screen.getByLabelText('Surname'), 'Doe');
     
-    // Select birth date
-    fireEvent.click(screen.getByText('Select birth date'));
-    fireEvent.click(screen.getByText('15'));
+    // Select birth date using HTML5 date input
+    const dateInput = screen.getByLabelText('Birth Date');
+    fireEvent.change(dateInput, { target: { value: '2000-01-15' } });
     
     // Select education
     fireEvent.click(screen.getByText('Bachelor Degree'));
