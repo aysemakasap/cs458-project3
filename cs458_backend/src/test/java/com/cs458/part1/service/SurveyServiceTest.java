@@ -2,55 +2,69 @@ package com.cs458.part1.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.cs458.part1.model.AIModel;
 import com.cs458.part1.model.AIType;
 import com.cs458.part1.model.Gender;
-import com.cs458.part1.model.AIModel;
 import com.cs458.part1.model.Survey;
-import com.cs458.part1.service.SurveyService;
+import com.cs458.part1.repository.SurveyRepository;
 
-@SpringBootTest
-@Transactional
+@ExtendWith(MockitoExtension.class)
 public class SurveyServiceTest {
 
-    @Autowired
+    @Mock
+    private SurveyRepository surveyRepository;
+
+    @InjectMocks
     private SurveyService surveyService;
 
-    @Test
-    public void testSaveSurvey() {
-        // Create a test AIModel
-        AIModel aiModel = new AIModel();
+    private Survey survey;
+    private AIModel aiModel;
+
+    @BeforeEach
+    public void setup() {
+        // Create an AIModel
+        aiModel = new AIModel();
         aiModel.setAiType(AIType.chatGPT);
         aiModel.setDescription("Test description");
 
-        List<AIModel> aiModels = new ArrayList<>();
-        aiModels.add(aiModel);
+        // Create a Survey
+        survey = Survey.builder()
+                .id(1)
+                .name("Test Name")
+                .surname("Test Surname")
+                .dateOfBirth(LocalDate.of(1990, 1, 1))
+                .city("Test City")
+                .gender(Gender.male)
+                .educationLevel("Bachelor Degree")
+                .useCaseOfAi("Test use case")
+                .aiModel(Collections.singletonList(aiModel))
+                .build();
+    }
 
-        // Create a test Survey
-        Survey survey = new Survey();
-        survey.setName("Test Name");
-        survey.setSurname("Test Surname");
-        survey.setDateOfBirth(LocalDate.of(1990, 1, 1));
-        survey.setCity("Test City");
-        survey.setGender(Gender.male);
-        survey.setEducationLevel("Bachelor Degree");
-        survey.setUseCaseOfAi("Test use case");
-        survey.setAiModel(aiModels);
+    @Test
+    public void shouldSaveSurvey() {
+        when(surveyRepository.save(any(Survey.class))).thenReturn(survey);
 
-        // Save the survey
         Survey savedSurvey = surveyService.saveSurvey(survey);
 
-        // Verify the survey was saved correctly
-        assertNotNull(savedSurvey.getId());
+        assertNotNull(savedSurvey);
         assertEquals("Test Name", savedSurvey.getName());
         assertEquals("Test Surname", savedSurvey.getSurname());
         assertEquals(LocalDate.of(1990, 1, 1), savedSurvey.getDateOfBirth());
@@ -61,5 +75,23 @@ public class SurveyServiceTest {
         assertEquals(1, savedSurvey.getAiModel().size());
         assertEquals(AIType.chatGPT, savedSurvey.getAiModel().get(0).getAiType());
         assertEquals("Test description", savedSurvey.getAiModel().get(0).getDescription());
+
+        verify(surveyRepository, times(1)).save(any(Survey.class));
+    }
+
+    @Test
+    public void shouldGetAllSurveys() {
+        List<Survey> surveyList = new ArrayList<>();
+        surveyList.add(survey);
+        
+        when(surveyRepository.findAll()).thenReturn(surveyList);
+
+        List<Survey> retrievedSurveys = surveyService.getAllSurveys();
+
+        assertNotNull(retrievedSurveys);
+        assertEquals(1, retrievedSurveys.size());
+        assertEquals("Test Name", retrievedSurveys.get(0).getName());
+        
+        verify(surveyRepository, times(1)).findAll();
     }
 }
