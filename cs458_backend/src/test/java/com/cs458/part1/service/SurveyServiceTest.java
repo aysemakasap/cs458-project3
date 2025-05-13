@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cs458.part1.Enums.AIType;
-import com.cs458.part1.Enums.Gender;
+import com.cs458.part1.model.AIType;
+import com.cs458.part1.model.Gender;
 import com.cs458.part1.model.AIModel;
 import com.cs458.part1.model.Survey;
 import com.cs458.part1.service.SurveyService;

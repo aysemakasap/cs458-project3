@@ -1,14 +1,24 @@
-// src/services/surveyService.js
+// src/services/SurveyService.js
+import axios from 'axios';
+
 export class SurveyService {
-  static async submitSurveyResult(formData) {
-    // In a real app, this would be an API call
-    console.log('Submitting survey data:', formData);
-    
-    // For testing purposes, we'll just return a success response
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ status: 200 });
-      }, 500);
-    });
+  // Rename this method to match what you're calling in SurveyPage.js
+  static async submitSurveyResult(surveyData) {
+    try {
+      const userToken = localStorage.getItem("userToken") || sessionStorage.getItem("userToken");
+      const response = await axios.post(
+        `http://localhost:8080/api/survey/save`,
+        surveyData,
+        {
+          headers: {
+            'Authorization': `Bearer ${userToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response;
+    } catch (error) {
+      return error.response;
+    }
   }
 }
